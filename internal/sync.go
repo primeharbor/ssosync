@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/awslabs/ssosync/internal/aws"
 	"github.com/awslabs/ssosync/internal/config"
@@ -507,6 +508,12 @@ func (s *syncGSuite) SyncGroupsUsers(query string) error {
 
 		log := log.WithFields(log.Fields{"group": awsGroup.DisplayName})
 
+		// If I'm told to ignore a group, don't delete it from AWS.
+		if s.ignoreGroup(awsGroup.DisplayName) {
+			log.Info("not deleting ignored group")
+			continue
+		}
+
 		log.Debug("finding group")
 		awsGroupFull, err := s.aws.FindGroupByDisplayName(awsGroup.DisplayName)
 		if err != nil {
@@ -786,7 +793,7 @@ func (s *syncGSuite) ignoreUser(name string) bool {
 
 func (s *syncGSuite) ignoreGroup(name string) bool {
 	for _, g := range s.cfg.IgnoreGroups {
-		if g == name {
+		if g == name || strings.HasPrefix(name, g) {
 			return true
 		}
 	}
