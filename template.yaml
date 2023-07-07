@@ -117,9 +117,6 @@ Parameters:
       - groups
       - users_groups
 
-
-
-
 Resources:
   SSOSyncFunction:
     Type: AWS::Serverless::Function
@@ -216,3 +213,30 @@ Resources:
     Properties:
       Name: SSOSyncIdentityStoreID
       SecretString: !Ref IdentityStoreID
+
+  SSOSyncFunctionFailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub ${AWS::StackName}-LambdaErrors
+      AlarmDescription: "Alarm if SSOSyncFunction lambda errors out"
+      Namespace: "AWS/Lambda"
+      MetricName: "Errors"
+      Dimensions:
+      - Name: "FunctionName"
+        Value: !Ref SSOSyncFunction
+      Statistic: "Sum"
+      ComparisonOperator: "GreaterThanThreshold"
+      Threshold: 0
+      EvaluationPeriods: 1
+      Period: 60
+      TreatMissingData: "ignore"
+      AlarmActions:
+        - !Ref SSOSyncFunctionFailureAlarmTopic
+
+  SSOSyncFunctionFailureAlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: "Alarm Destination for SSOSyncFunction"
+      Subscription:
+        - Endpoint: !Ref GoogleAdminEmail
+          Protocol: Email
