@@ -226,9 +226,9 @@ Resources:
         Value: !Ref SSOSyncFunction
       Statistic: "Sum"
       ComparisonOperator: "GreaterThanThreshold"
-      Threshold: 0
+      Threshold: 1
       EvaluationPeriods: 1
-      Period: 60
+      Period: 180
       TreatMissingData: "ignore"
       AlarmActions:
         - !Ref SSOSyncFunctionFailureAlarmTopic
